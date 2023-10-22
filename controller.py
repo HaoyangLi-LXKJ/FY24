@@ -12,16 +12,15 @@ class Controller:
     self.team_id = team_id
     self.ws = ws
 
-    self.target_x = 0
-    self.target_y = 0
+    self.target_x = 1000
+    self.target_y = 600
 
-    # Last turnning angle, used for PID controller
-    self.last_angle = 0
+    # Last difference angle, used for PD controller
+    self.last_difference_angle = 0
+    self.last_turning_direction = 0
 
-    self.trunning_angle_P = 1/20
-    self.trunning_angle_D = 1/20
-    self.turning_angle_I = 0
-
+    self.truning_angle_P = 1/10
+    self.truning_angle_D = 1/10
 
   def move_forward(self):
     print("向前移动")
@@ -60,7 +59,10 @@ class Controller:
     self.target_y = y
 
   def update_controller(self):
-    self.set_target_position(1000, 600)
+    # If the gold box exists, set the target to the gold box
+    if self.map.gold_box_exist:
+      self.set_target_position(
+          self.map.gold_box_position_x, self.map.gold_box_position_y)
     my_position_x = self.birds.birds[self.team_id].position_x
     my_position_y = self.birds.birds[self.team_id].position_y
     my_velocity_x = self.birds.birds[self.team_id].velocity_x
@@ -69,21 +71,69 @@ class Controller:
     if self.map.geo_distance(my_position_x, my_position_y, self.target_x, self.target_y) < 20:
       self.stop_moving()
       return
-    # Move forward all the time
-    self.move_forward()
     # Calculate the angle of the target point to the origin
-    target_angle = self.map.calculate_angle(self.target_x - my_position_x, self.target_y - my_position_y)
+    target_angle = self.map.calculate_angle(
+        self.target_x - my_position_x, self.target_y - my_position_y)
     print("目标角度：" + str(target_angle/3.14))
     difference_angle = target_angle - self.birds.birds[self.team_id].angle
     print("角度差：" + str(difference_angle/3.14))
 
-    # If the angle difference between the target and my bird is less than 0.02, stop turning
-    if abs(difference_angle) < 0.02:
-      self.stop_turning()
-    # Than, if the difference is between 0 to pi, turn right otherwise turn left
-    elif 0 < difference_angle < math.pi:
-      self.turn_right(abs(difference_angle)/80)
+    # If the difference is between -pi/2 to pi/2, move forward otherwise move backward
+    # While moving forward, if the turning speed is positive turn right otherwise turn left
+    # while moving backward, if the turning speed is positive turn left otherwise turn right
+    if difference_angle > -math.pi/2 and difference_angle < math.pi/2:
+      self.move_forward()
+      # If last time we go backward, we don't want to use the last difference angle
+      if self.last_turning_direction != 0:
+        last_difference_angle_D = 0
+      else:
+        last_difference_angle_D = difference_angle - self.last_difference_angle
+      self.last_turning_direction = 0
+      self.last_difference_angle = difference_angle
+      factor_P = difference_angle * self.truning_angle_P
+      factor_D = last_difference_angle_D * self.truning_angle_D
+      truning_speed = factor_P + factor_D
+      print("P因子：" + str(factor_P))
+      print("D因子：" + str(factor_D))
+      # Make sure the turnning angle is between -0.1 to 0.1
+      if truning_speed > 0.1:
+        truning_speed = 0.1
+      elif truning_speed < -0.1:
+        truning_speed = -0.1
+      print("转动速度：" + str(truning_speed))
+      if truning_speed > 0:
+        self.turn_right(truning_speed)
+      else:
+        self.turn_left(-truning_speed)
     else:
-      self.turn_left(abs(difference_angle)/80)
-    print("我方兔子位置：" + str(self.birds.birds[self.team_id].position_x) + "," + str(
+      self.move_backward()
+      # While moving backward, the difference_angle is compared against current angle - pi
+      difference_angle = difference_angle - math.pi
+      # The difference_angle should be between -pi to pi
+      if difference_angle < -math.pi:
+        difference_angle = difference_angle + 2 * math.pi
+      # If last time we go forward, we don't want to use the last difference angle
+      if self.last_turning_direction != 1:
+        last_difference_angle_D = 0
+      else:
+        last_difference_angle_D = difference_angle - self.last_difference_angle
+      self.last_turning_direction = 1
+      self.last_difference_angle = difference_angle
+      factor_P = difference_angle * self.truning_angle_P
+      factor_D = last_difference_angle_D * self.truning_angle_D
+      truning_speed = factor_P + factor_D
+      print("P因子：" + str(factor_P))
+      print("D因子：" + str(factor_D))
+      # Make sure the turnning angle is between -0.1 to 0.1
+      if truning_speed > 0.1:
+        truning_speed = 0.1
+      elif truning_speed < -0.1:
+        truning_speed = -0.1
+      print("转动速度：" + str(truning_speed))
+      if truning_speed > 0:
+        self.turn_left(truning_speed)
+      else:
+        self.turn_right(-truning_speed)
+
+    print("我方菜鸟位置：" + str(self.birds.birds[self.team_id].position_x) + "," + str(
         self.birds.birds[self.team_id].position_y))
