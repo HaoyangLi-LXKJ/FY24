@@ -15,8 +15,13 @@ class Controller:
     self.target_x = 0
     self.target_y = 0
 
-    # Last turnning angle, used for PD controller
+    # Last turnning angle, used for PID controller
     self.last_angle = 0
+
+    self.trunning_angle_P = 1/20
+    self.trunning_angle_D = 1/20
+    self.turning_angle_I = 0
+
 
   def move_forward(self):
     print("向前移动")
@@ -64,23 +69,21 @@ class Controller:
     if self.map.geo_distance(my_position_x, my_position_y, self.target_x, self.target_y) < 20:
       self.stop_moving()
       return
+    # Move forward all the time
+    self.move_forward()
     # Calculate the angle of the target point to the origin
     target_angle = self.map.calculate_angle(self.target_x - my_position_x, self.target_y - my_position_y)
     print("目标角度：" + str(target_angle/3.14))
     difference_angle = target_angle - self.birds.birds[self.team_id].angle
     print("角度差：" + str(difference_angle/3.14))
-    # If the angle difference between the target and my bird is between -pi/2 and pi/2, move forward otherwise move backward
-    if -3.14 / 2 < difference_angle < 3.14 / 2:
-      self.move_forward()
-    else:
-      self.move_backward()
+
     # If the angle difference between the target and my bird is less than 0.02, stop turning
     if abs(difference_angle) < 0.02:
       self.stop_turning()
-    # Than, if the difference is between 0 to pi/2 or -pi to -pi/2, turn right otherwise turn left
-    elif 0 < difference_angle < 3.14 / 2 or -3.14 < difference_angle < -3.14 / 2:
-      self.turn_right(abs(difference_angle) / 20)
+    # Than, if the difference is between 0 to pi, turn right otherwise turn left
+    elif 0 < difference_angle < math.pi:
+      self.turn_right(abs(difference_angle)/80)
     else:
-      self.turn_left(abs(difference_angle) / 20)
+      self.turn_left(abs(difference_angle)/80)
     print("我方兔子位置：" + str(self.birds.birds[self.team_id].position_x) + "," + str(
         self.birds.birds[self.team_id].position_y))
