@@ -12,8 +12,10 @@ class Controller:
     self.team_id = team_id
     self.ws = ws
 
-    self.target_x = 1000
-    self.target_y = 600
+    self.target_x = 680
+    self.target_y = 730
+
+    self.frame_per_message = 6
 
     # Last difference angle, used for PD controller
     self.last_difference_angle = 0
@@ -75,7 +77,36 @@ class Controller:
     target_angle = self.map.calculate_angle(
         self.target_x - my_position_x, self.target_y - my_position_y)
     print("目标角度：" + str(target_angle/3.14))
-    difference_angle = target_angle - self.birds.birds[self.team_id].angle
+    # Array storing the upcoming frames position
+    upcoming_frames_position_x = []
+    upcoming_frames_position_y = []
+    # Calculate the upcoming frames position
+    for i in range(1, self.frame_per_message + 1):
+      upcoming_frames_position_x.append(
+          my_position_x + my_velocity_x * i)
+      upcoming_frames_position_y.append(
+          my_position_y + my_velocity_y * i)
+    hitting_wall = False
+    # If we are going to hit the wall(any of the upcoming frames outside the map), the target angle should temporaraly be change to perpendicular to the moving direction
+    for i in range(0, self.frame_per_message):
+      if not self.map.is_inside_map(upcoming_frames_position_x[i], upcoming_frames_position_y[i]):
+        hitting_wall = True
+        print ("将要撞墙")
+        print ("撞墙位置：" + str(upcoming_frames_position_x[i]) + "," + str(upcoming_frames_position_y[i]))
+        break
+    
+    if hitting_wall:
+      # If we are going to hit the wall, we should set the target to the perpendicular direction
+      difference_angle = self.map.calculate_angle(my_velocity_x, my_velocity_y) + math.pi
+      # If the difference angle is greater than pi, we should minus 2pi
+      if difference_angle > math.pi:
+        difference_angle = difference_angle - 2 * math.pi
+      # If the difference angle is less than -pi, we should add 2pi
+      elif difference_angle < -math.pi:
+        difference_angle = difference_angle + 2 * math.pi
+    else:
+      difference_angle = target_angle - self.birds.birds[self.team_id].angle
+
     print("角度差：" + str(difference_angle/3.14))
 
     # If the difference is between -pi/2 to pi/2, move forward otherwise move backward

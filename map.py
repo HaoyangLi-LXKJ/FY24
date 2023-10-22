@@ -39,32 +39,35 @@ class Map:
     # Create a list to store the border segments as Polygon objects
     polygons = []
 
-    # Plot each border segment with a different color
-    for segment in borders:
-      for i, points in enumerate(segment):
-        color = colors[i % len(colors)]  # Cycle through the list of colors
-        x_values = [point["x"] for point in points]
-        y_values = [point["y"] for point in points]
-        # plt.plot(x_values, y_values, color + '-', linewidth=4)
-        polygon = Polygon([(x, y) for x, y in zip(x_values, y_values)])
-        polygons.append(polygon)
+    # # Plot each border segment with a different color
+    # for segment in borders:
+    #   for i, points in enumerate(segment):
+    #     color = colors[i % len(colors)]  # Cycle through the list of colors
+    #     x_values = [point["x"] for point in points]
+    #     y_values = [point["y"] for point in points]
+    #     # plt.plot(x_values, y_values, color + '-', linewidth=4)
+    #     polygon = Polygon([(x, y) for x, y in zip(x_values, y_values)])
+    #     polygons.append(polygon)
 
     # Create polygons for the blocks and append them to the list
     # And show the block coords in the map
+    # Broden the block polygon by 47.5 to make sure the bird won't hit the block
     for block in blocks:
       block_coords = [(point["x"], point["y"]) for point in block[0]]
       block_polygon = Polygon(block_coords)
+      block_polygon = block_polygon.buffer(47.5)
       polygons.append(block_polygon)
       # Show the block coords in the map
       x_values = [point["x"] for point in block[0]]
       y_values = [point["y"] for point in block[0]]
       plt.plot(x_values, y_values, 'k-', linewidth=4)
 
-      # Create polygons for the blocks in block[1] and append them to the list
+    # Create polygons for the blocks in block[1] and append them to the list
     # And show the block coords in the map with different color
     for block in blocks:
       block_coords = [(point["x"], point["y"]) for point in block[1]]
       block_polygon = Polygon(block_coords)
+      block_polygon = block_polygon.buffer(47.5)
       polygons.append(block_polygon)
       # Show the block coords in the map
       x_values = [point["x"] for point in block[1]]
@@ -93,9 +96,9 @@ class Map:
 
   def is_inside_map(self, x, y):
     point = Point(x, y)
-    if not self.battle_polygons.contains(point):
-      return False
-    return self.prohibited_polygons.contains(point)
+    # if not self.battle_polygons.contains(point):
+    #   return False
+    return not self.prohibited_polygons.contains(point)
 
   def update_gold_box(self, data):
     # If the gold box doesn't have x, and y coordinates, return False
