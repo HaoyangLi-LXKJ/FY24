@@ -55,6 +55,7 @@ class CBirds:
       cbird.dirState = bird["dirState"]
       cbird.velocity_x = bird["velocity"]["x"]
       cbird.velocity_y = bird["velocity"]["y"]
+      cbird.speed = bird["speed"]
       cbird.position_x = bird["position"]["x"]
       cbird.position_y = bird["position"]["y"]
       cbird.angle = bird["angle"]
@@ -89,6 +90,7 @@ class CBirds:
       cbird.dirState = bird["dirState"]
       cbird.velocity_x = bird["velocity"]["x"]
       cbird.velocity_y = bird["velocity"]["y"]
+      cbird.speed = bird["speed"]
       cbird.position_x = bird["position"]["x"]
       cbird.position_y = bird["position"]["y"]
       cbird.angle = bird["angle"]
@@ -105,8 +107,3 @@ class CBirds:
 
   def get_bird(self, id):
     return self.birds[id]
-
-  def get_timestamp_diff(self):
-    if self.lastTimeStamp == 0:
-      return 0
-    return self.timeStamp - self.lastTimeStamp
