@@ -12,7 +12,7 @@ class Controller:
     self.team_id = team_id
     self.ws = ws
 
-    self.arrive_distance = 30
+    self.arrive_distance = 40
     self.target_x = 0
     self.target_y = 0
     # Fifo storing all the intermediate target points
@@ -28,7 +28,7 @@ class Controller:
 
     self.truning_angle_P = 0.15
     self.turning_angle_I = 0.01
-    self.truning_angle_D = 0.3
+    self.truning_angle_D = 0.17
 
   def move_forward(self):
     # print("向前移动")
@@ -51,7 +51,7 @@ class Controller:
     self.ws.send(json.dumps({"commandType": "steerBack"}))
 
   def stop_moving(self):
-    print("停止移动")
+    # print("停止移动")
     self.ws.send(json.dumps({"commandType": "stop"}))
 
   def remove_skill(self):

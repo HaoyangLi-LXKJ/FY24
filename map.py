@@ -61,7 +61,7 @@ class Map:
     for block in blocks:
       block_coords = [(point["x"], point["y"]) for point in block[0]]
       block_polygon = Polygon(block_coords)
-      block_polygon = block_polygon.buffer(60)
+      block_polygon = block_polygon.buffer(65)
       polygons.append(block_polygon)
       # Show the block coords in the map
       x_values = [point["x"] for point in block[0]]
@@ -73,7 +73,7 @@ class Map:
     for block in blocks:
       block_coords = [(point["x"], point["y"]) for point in block[1]]
       block_polygon = Polygon(block_coords)
-      block_polygon = block_polygon.buffer(60)
+      block_polygon = block_polygon.buffer(65)
       polygons.append(block_polygon)
       # Show the block coords in the map
       x_values = [point["x"] for point in block[1]]
