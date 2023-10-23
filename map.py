@@ -40,14 +40,14 @@ class Map:
     polygons = []
 
     # # Plot each border segment with a different color
-    # for segment in borders:
-    #   for i, points in enumerate(segment):
-    #     color = colors[i % len(colors)]  # Cycle through the list of colors
-    #     x_values = [point["x"] for point in points]
-    #     y_values = [point["y"] for point in points]
-    #     # plt.plot(x_values, y_values, color + '-', linewidth=4)
-    #     polygon = Polygon([(x, y) for x, y in zip(x_values, y_values)])
-    #     polygons.append(polygon)
+    for segment in borders:
+      for i, points in enumerate(segment):
+        color = colors[i % len(colors)]  # Cycle through the list of colors
+        x_values = [point["x"] for point in points]
+        y_values = [point["y"] for point in points]
+        # plt.plot(x_values, y_values, color + '-', linewidth=4)
+        polygon = Polygon([(x, y) for x, y in zip(x_values, y_values)])
+        polygons.append(polygon)
 
     # Create polygons for the blocks and append them to the list
     # And show the block coords in the map
