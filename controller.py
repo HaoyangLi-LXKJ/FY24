@@ -26,9 +26,9 @@ class Controller:
     self.last_turning_direction = 0
     self.difference_integral = 0
 
-    self.truning_angle_P = 0.15
+    self.truning_angle_P = 0.17
     self.turning_angle_I = 0.01
-    self.truning_angle_D = 0.17
+    self.truning_angle_D = 0.14
 
   def move_forward(self):
     # print("向前移动")

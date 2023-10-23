@@ -1,14 +1,16 @@
+#coding=utf-8
 import json
 import websocket    # pip3 install websocket-client
 
 import map
 import cbirds
 import controller
+import strategy
 """
 进入房间的指令
 内部参数说明：employeeId为队长工号；roomId为打开游戏主页的管理员工号；accessKey为注册兔子后给的唯一识别码
 """
-AI_ENTER_ROOM_COMMAND = {"commandType": "aiEnterRoom", "employeeId": "122690",
+AI_ENTER_ROOM_COMMAND = {"commandType": "aiEnterRoom", "employeeId": "353395",
                          "roomId": "353395", "accessKey": "1a77644dbfc09a40cc291440a2c9e50a"}
 
 
@@ -21,6 +23,7 @@ class WebSocketClient(object):
     self.my_map = map.Map()
     self.my_birds = cbirds.CBirds()
     self.my_controller = controller.Controller(self.my_map, self.my_birds, self.my_team_id, self.ws)
+    self.my_strategy = strategy.Strategy(self.my_map, self.my_birds, self.my_team_id, self.ws,self.my_controller)
 
   def on_open(self, ws):
     """
@@ -100,6 +103,8 @@ class WebSocketClient(object):
       box_exist = self.my_map.update_gold_box(data)
     # 分析后发送行动指令
       self.my_controller.update_controller()
+      #self.my_strategy.decision()
+
 
 if __name__ == "__main__":
   web_socket_client = WebSocketClient()
