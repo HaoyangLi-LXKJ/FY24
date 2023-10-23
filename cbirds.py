@@ -31,6 +31,7 @@ class CBirds:
     self.birds = dict()
     self.lastTimeStamp = 0
     self.timeStamp = 0
+    self.initial_timeStamp = 0
 
   def set_birds(self, data):
     # Extract the birds data from the JSON data
@@ -68,6 +69,7 @@ class CBirds:
       # Add the bird to the dictionary with name as key
       self.birds[cbird.id] = cbird
     self.timeStamp = data["timeStamp"]
+    self.initial_timeStamp = data["timeStamp"]
 
   # Update the birds data based on id in data
   def update_birds(self, data):
@@ -107,3 +109,6 @@ class CBirds:
 
   def get_bird(self, id):
     return self.birds[id]
+  
+  def get_past_time_in_ms(self):
+    return self.timeStamp - self.initial_timeStamp

@@ -15,14 +15,14 @@ class Controller:
     self.target_x = 680
     self.target_y = 730
 
-    self.frame_per_message = 3
+    self.frame_per_message = 6
 
     # Last difference angle, used for PD controller
     self.last_difference_angle = 0
     self.last_turning_direction = 0
     self.difference_integral = 0
 
-    self.truning_angle_P = 1/10
+    self.truning_angle_P = 1/12
     self.turning_angle_I = 1/50
     self.truning_angle_D = 1/10
 
@@ -66,8 +66,12 @@ class Controller:
     # Array storing the upcoming frames position
     upcoming_frames_position_x = []
     upcoming_frames_position_y = []
-    upcoming_frames_position_x.append(position_x + velocity * math.cos(angle * moveState))
-    upcoming_frames_position_y.append(position_y + velocity * math.sin(angle * moveState))
+    # If the moveState is -1, it is moving backward, the angle is the opposite direction
+    if moveState == -1:
+      angle = angle - math.pi
+    # Calculate the current frame position
+    upcoming_frames_position_x.append(position_x + velocity * math.cos(angle))
+    upcoming_frames_position_y.append(position_y + velocity * math.sin(angle))
     # Calculate the upcoming frames position
     for i in range(1, self.frame_per_message):
       upcoming_frames_position_x.append(
@@ -83,10 +87,11 @@ class Controller:
   def update_controller(self):
     # If the gold box exists, set the target to the gold box, else we move to the initial target point
     if self.map.gold_box_exist:
-      self.set_target_position(
-          680, 200)
-    else:
+      self.set_target_position(self.map.gold_box_position_x, self.map.gold_box_position_y)
+    elif self.birds.get_past_time_in_ms() < 5000:
       self.set_target_position(680, 730)
+    else: 
+      self.set_target_position(680, 200)
 
     my_position_x = self.birds.birds[self.team_id].position_x
     my_position_y = self.birds.birds[self.team_id].position_y
@@ -95,6 +100,7 @@ class Controller:
     my_velocity = self.birds.birds[self.team_id].speed
     my_angle = self.birds.birds[self.team_id].angle
     my_angle_speed = self.birds.birds[self.team_id].angularSpeed
+    my_moveState = self.birds.birds[self.team_id].moveState
     # If the geo distance between my bird and the target is less than 5, stop moving
     if self.map.geo_distance(my_position_x, my_position_y, self.target_x, self.target_y) < 30:
       self.stop_moving()
@@ -103,21 +109,33 @@ class Controller:
     target_angle = self.map.calculate_angle(
         self.target_x - my_position_x, self.target_y - my_position_y)
     print("目标角度：" + str(target_angle/3.14))
-    moveState = self.birds.birds[self.team_id].moveState
-    hitting_wall = self.hitting_wall_or_not(my_position_x, my_position_y, my_velocity, my_angle, my_angle_speed, moveState)
+    hitting_wall = self.hitting_wall_or_not(my_position_x, my_position_y, my_velocity, my_angle, my_angle_speed, my_moveState)
     # Calculate the difference angle between the target angle and my bird's angle
     difference_angle = target_angle - self.birds.birds[self.team_id].angle
     
     if hitting_wall:
       # self.stop_moving()
       # return
+      # If the bird is moving backward, the angle should be the opposite direction
+      if my_moveState == -1:
+        angle_temp = my_angle - math.pi
+      else:
+        angle_temp = my_angle
       # Try to see whether turn the angle -pi/2 will hit the wall
-      hitting_wall_turn_right = self.hitting_wall_or_not(my_position_x, my_position_y, my_velocity, my_angle - math.pi/2, my_angle_speed)
+      angle_try_right = angle_temp - math.pi/2
+      # If the angle is less than -pi, we should add 2pi
+      if angle_try_right < -math.pi:
+        angle_try_right = angle_try_right + 2 * math.pi
+      # If the trying right angle is between -pi/2 to pi/2, we move forward, otherwise we move backward
+      moving_forward = -1
+      if angle_try_right > -math.pi/2 and angle_try_right < math.pi/2:
+        moving_forward = 1
+      hitting_wall_turn_right = self.hitting_wall_or_not(my_position_x, my_position_y, my_velocity, angle_try_right, moving_forward)
       # If turning right wont hit the wall, we should turn right
       if not hitting_wall_turn_right:
-        difference_angle = self.map.calculate_angle(my_velocity_x, my_velocity_y) - math.pi/2
+        difference_angle = - math.pi / 7 * 2
       else :
-        difference_angle = self.map.calculate_angle(my_velocity_x, my_velocity_y) + math.pi/2
+        difference_angle = math.pi / 7 * 2
       # If the difference angle is greater than pi, we should minus 2pi
       if difference_angle > math.pi:
         difference_angle = difference_angle - 2 * math.pi
@@ -182,15 +200,17 @@ class Controller:
       print("D因子：" + str(factor_D))
       print("I因子：" + str(factor_I))
       # Make sure the turnning angle is between -0.1 to 0.1
-      if truning_speed > 0.1:
+      if truning_speed >= 0.1:
         truning_speed = 0.1
-      elif truning_speed < -0.1:
+      elif truning_speed <= -0.1:
         truning_speed = -0.1
       print("转动速度：" + str(truning_speed))
-      if truning_speed > 0:
+      if truning_speed >= 0.01:
         self.turn_left(truning_speed)
-      else:
+      elif truning_speed <= -0.01:
         self.turn_right(-truning_speed)
+      else:
+        self.stop_turning()
     print("我方菜鸟位置：" + str(self.birds.birds[self.team_id].position_x) + "," + str(
         self.birds.birds[self.team_id].position_y))
     
