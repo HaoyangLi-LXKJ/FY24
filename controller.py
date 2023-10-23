@@ -62,12 +62,12 @@ class Controller:
     self.target_x = x
     self.target_y = y
 
-  def hitting_wall_or_not(self, position_x, position_y, velocity, angle, angle_speed):
+  def hitting_wall_or_not(self, position_x, position_y, velocity, angle, angle_speed, moveState):
     # Array storing the upcoming frames position
     upcoming_frames_position_x = []
     upcoming_frames_position_y = []
-    upcoming_frames_position_x.append(position_x + velocity * math.cos(angle))
-    upcoming_frames_position_y.append(position_y + velocity * math.sin(angle))
+    upcoming_frames_position_x.append(position_x + velocity * math.cos(angle * moveState))
+    upcoming_frames_position_y.append(position_y + velocity * math.sin(angle * moveState))
     # Calculate the upcoming frames position
     for i in range(1, self.frame_per_message):
       upcoming_frames_position_x.append(
@@ -103,7 +103,8 @@ class Controller:
     target_angle = self.map.calculate_angle(
         self.target_x - my_position_x, self.target_y - my_position_y)
     print("目标角度：" + str(target_angle/3.14))
-    hitting_wall = self.hitting_wall_or_not(my_position_x, my_position_y, my_velocity, my_angle, my_angle_speed)
+    moveState = self.birds.birds[self.team_id].moveState
+    hitting_wall = self.hitting_wall_or_not(my_position_x, my_position_y, my_velocity, my_angle, my_angle_speed, moveState)
     # Calculate the difference angle between the target angle and my bird's angle
     difference_angle = target_angle - self.birds.birds[self.team_id].angle
     
